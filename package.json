@@ -36,5 +36,8 @@
     "url": "https://github.com/bondrogeen/vuesp-struct/issues"
   },
   "homepage": "https://github.com/bondrogeen/vuesp-struct#readme",
-  "description": ""
+  "description": "``` npm install vuesp-struct ```",
+  "directories": {
+    "example": "example"
+  }
 }
