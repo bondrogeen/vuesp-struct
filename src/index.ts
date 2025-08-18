@@ -78,6 +78,10 @@ class VuespStructs {
     console.warn(`No data or data not ArrayBuffer`);
     return null;
   }
+
+  static parseStruct(data: string): unknown {
+    return Struct.parseStruct(data);
+  }
 }
 
 export default VuespStructs;

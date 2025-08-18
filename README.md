@@ -82,7 +82,7 @@ if (dataSetting) {
 
 See [example/example.js](example/example.js) for more.
 
-### 1.0.1 (2025-08-08)
+### 1.1.2 (2025-08-08)
 
 - (bondrogeen) typescript
 
