@@ -18,5 +18,6 @@ declare class VuespStructs {
         object: Record<string, unknown>;
         key: string;
     } | null | false;
+    static parseStruct(data: string): unknown;
 }
 export default VuespStructs;

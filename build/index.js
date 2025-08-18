@@ -69,6 +69,9 @@ class VuespStructs {
         console.warn(`No data or data not ArrayBuffer`);
         return null;
     }
+    static parseStruct(data) {
+        return c_struct_to_json_1.default.parseStruct(data);
+    }
 }
 _VuespStructs_keys = new WeakMap(), _VuespStructs_structs = new WeakMap(), _VuespStructs_isOk = new WeakMap();
 exports.default = VuespStructs;
