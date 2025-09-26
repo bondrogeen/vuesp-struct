@@ -13,7 +13,7 @@ declare class VuespStructs {
     #private;
     constructor();
     init({ keys, structs }: InitOptions): void;
-    set(key: string, data?: Record<string, unknown>): ArrayBuffer | null | false;
+    set(name: string, data?: Record<string, unknown>): ArrayBuffer | null | false;
     get(data: ArrayBuffer): {
         object: Record<string, unknown>;
         key: string;

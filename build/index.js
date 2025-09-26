@@ -33,14 +33,15 @@ class VuespStructs {
             __classPrivateFieldSet(this, _VuespStructs_isOk, true, "f");
         }
     }
-    set(key, data) {
+    set(name, data) {
         console.log(__classPrivateFieldGet(this, _VuespStructs_isOk, "f"));
         if (!__classPrivateFieldGet(this, _VuespStructs_isOk, "f")) {
             console.warn(`Struct not init`);
             return false;
         }
+        const index = typeof name === 'string' ? __classPrivateFieldGet(this, _VuespStructs_keys, "f").findIndex(i => i === name) : name;
+        const key = __classPrivateFieldGet(this, _VuespStructs_keys, "f")[index];
         const struct = __classPrivateFieldGet(this, _VuespStructs_structs, "f")[key];
-        const index = __classPrivateFieldGet(this, _VuespStructs_keys, "f").findIndex(i => i === key);
         if (struct && data) {
             return struct.setObject({ ...data, key: index }).getBuffer();
         }

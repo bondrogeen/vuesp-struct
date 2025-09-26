@@ -41,14 +41,17 @@ class VuespStructs {
     }
   }
 
-  set(key: string, data?: Record<string, unknown>): ArrayBuffer | null | false {
-    console.log(this.#isOk);
+  set(name: string, data?: Record<string, unknown>): ArrayBuffer | null | false {
+    // console.log(this.#isOk);
     if (!this.#isOk) {
       console.warn(`Struct not init`);
       return false;
     }
+
+    const index = typeof name === 'string' ? this.#keys.findIndex(i => i === name) : name;
+    const key = this.#keys[index];
+
     const struct = this.#structs[key];
-    const index = this.#keys.findIndex(i => i === key);
     if (struct && data) {
       return struct.setObject({ ...data, key: index }).getBuffer();
     }
