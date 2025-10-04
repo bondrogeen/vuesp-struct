@@ -34,7 +34,7 @@ class VuespStructs {
         }
     }
     set(name, data) {
-        console.log(__classPrivateFieldGet(this, _VuespStructs_isOk, "f"));
+        // console.log(this.#isOk);
         if (!__classPrivateFieldGet(this, _VuespStructs_isOk, "f")) {
             console.warn(`Struct not init`);
             return false;

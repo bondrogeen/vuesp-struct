@@ -28,7 +28,7 @@ const initStruct = {
 struct.init(initStruct);
 
 const objectSetting = {
-  login: 'admin',
+  login: 'Привет',
   pass: 'admin',
 };
 
