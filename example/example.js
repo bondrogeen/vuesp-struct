@@ -20,6 +20,8 @@ const initStruct = {
       { type: 'uint8_t', name: 'firmware', length: 3 },
       { type: 'uint32_t', name: 'totalBytes' },
       { type: 'uint32_t', name: 'usedBytes' },
+      { type: 'uint64_t', name: 'big' },
+      { type: 'int64_t', name: 'bigint' },
       { type: 'uint32_t', name: 'id' },
     ],
   },
@@ -37,6 +39,8 @@ const objectInfo = {
   totalBytes: 1024,
   usedBytes: 168545,
   id: 8,
+  big: 9223372036854775000,
+  bigint: -523372036854775000,
 };
 
 const bufferInfo = struct.set('INFO', objectInfo);
