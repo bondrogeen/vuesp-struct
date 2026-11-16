@@ -1,75 +1,40 @@
-// import VuespStruct from '../build/';
+import StructCodec from '../build/index.js';
 
-const VuespStruct = require('../build/index').default;
-
-// import VuespStruct from 'vuesp-struct';
-
-const struct = new VuespStruct();
-
-const initStruct = {
-  keys: ['INIT', 'SETTINGS', 'INFO'],
-  structs: {
-    Init: [{ type: 'uint8_t', name: 'key' }],
-    Settings: [
-      { type: 'uint8_t', name: 'key' },
-      { type: 'char', name: 'login', length: 12 },
-      { type: 'char', name: 'pass', length: 12 },
-    ],
-    Info: [
-      { type: 'uint8_t', name: 'key' },
-      { type: 'uint8_t', name: 'firmware', length: 3 },
-      { type: 'uint32_t', name: 'totalBytes' },
-      { type: 'uint32_t', name: 'usedBytes' },
-      { type: 'uint64_t', name: 'big' },
-      { type: 'int64_t', name: 'bigint' },
-      { type: 'uint32_t', name: 'id' },
-    ],
+const protocol = {
+  protocol: 2,
+  enums: {
+    keys: { INIT: 0, PORT: 1 },
+    commands: { NONE: 0, GET: 1, SET: 2, SAVE: 254 },
   },
+  structs: {
+    Init: {
+      size: 1,
+      fields: [{ name: 'key', kind: 'scalar', type: 'uint8_t', offset: 0 }],
+    },
+    Port: {
+      size: 5,
+      fields: [
+        { name: 'key', kind: 'scalar', type: 'uint8_t', offset: 0 },
+        { name: 'gpio', kind: 'scalar', type: 'uint8_t', offset: 1 },
+        { name: 'value', kind: 'scalar', type: 'uint16_t', offset: 2 },
+        { name: 'command', kind: 'scalar', type: 'uint8_t', offset: 4 },
+      ],
+    },
+  },
+  descriptions: {},
 };
 
-struct.init(initStruct);
+const codec = new StructCodec().init(protocol);
 
-const objectSetting = {
-  login: 'Привет',
-  pass: 'admin',
-};
+const buffer = codec.set('PORT', {
+  gpio: 14,
+  value: 10,
+  command: protocol.enums.commands.SET,
+});
 
-const objectInfo = {
-  firmware: [1, 255, 0],
-  totalBytes: 1024,
-  usedBytes: 168545,
-  id: 8,
-  big: 9223372036854775000,
-  bigint: -523372036854775000,
-};
+console.log('bytes:', [...new Uint8Array(buffer)]);
 
-const bufferInfo = struct.set('INFO', objectInfo);
+console.log('message:', codec.get(buffer));
 
-console.log(bufferInfo);
-// ArrayBuffer {
-//   [Uint8Contents]: <02 01 ff 00 00 04 00 00 61 92 02 00 08 00 00 00>,
-//   byteLength: 16
-// }
-
-const dataInfo = struct.get(bufferInfo);
-if (dataInfo) {
-  const { object, key } = dataInfo;
-  console.log(object);
-  //   {
-  //     key: 2,
-  //     firmware: [ 1, 255, 0 ],
-  //     totalBytes: 1024,
-  //     usedBytes: 168545,
-  //     id: 8
-  //   }
-  console.log(key);
-  //   INFO
-}
-
-const bufferSetting = struct.set('SETTINGS', objectSetting);
-
-const dataSetting = struct.get(bufferSetting);
-if (dataSetting) {
-  const { object, key } = dataSetting;
-  console.log(object, key);
-}
+console.log('sizeOf(PORT):', codec.sizeOf('PORT'));
+console.log('commands.SET:', codec.commands.SET);

@@ -1,115 +1,111 @@
 # vuesp-struct
 
-```
+Парсер протокола и бинарный кодек для проектов Vuesp.
+
+Из одного C++ заголовка (`protocol.h`) получаются JSON-описание, TypeScript-константы
+и проверка layout для прошивки. Код Arduino и JS всегда синхронизированы.
+
+```bash
 npm install vuesp-struct
 ```
 
-## Usage
+## Быстрый старт
 
 ```js
+import StructCodec, { parseProtocol } from 'vuesp-struct';
 
-const VuespStruct = require('../build/index').default;
-// or
-// import VuespStruct from 'vuesp-struct';
+const source = `
+enum key : uint8_t { KEY_INIT = 0, KEY_PORT = 1 };
+enum cmd : uint8_t { CMD_NONE = 0, CMD_SET = 2 };
 
-const struct = new VuespStruct();
+struct Init { uint8_t key; };
 
-const initStruct = {
-  keys: ['INIT', 'SETTINGS', 'INFO'],
-  structs: {
-    Init: [{ type: 'uint8_t', name: 'key' }],
-    Settings: [
-      { type: 'uint8_t', name: 'key' },
-      { type: 'char', name: 'login', length: 12 },
-      { type: 'char', name: 'pass', length: 12 },
-    ],
-    Info: [
-      { type: 'uint8_t', name: 'key' },
-      { type: 'uint8_t', name: 'firmware', length: 3 },
-      { type: 'uint32_t', name: 'totalBytes' },
-      { type: 'uint32_t', name: 'usedBytes' },
-      { type: 'uint32_t', name: 'id' },
-    ],
-  },
+#pragma pack(push, 1)
+struct Port {
+  uint8_t key;
+  uint8_t gpio;
+  uint16_t value;
+  uint8_t command;
 };
+#pragma pack(pop)
+`;
 
-struct.init(initStruct);
+const protocol = parseProtocol(source, { file: 'protocol.h' });
 
-const objectSetting = {
-  login: 'admin',
-  pass: 'admin',
-};
+const codec = new StructCodec().init(protocol);
 
-const objectInfo = {
-  firmware: [1, 255, 0],
-  totalBytes: 1024,
-  usedBytes: 168545,
-  id: 8,
-};
-
-const bufferInfo = struct.set('INFO', objectInfo);
-
-console.log(bufferInfo);
-// ArrayBuffer {
-//   [Uint8Contents]: <02 01 ff 00 00 04 00 00 61 92 02 00 08 00 00 00>,
-//   byteLength: 16
-// }
-
-const dataInfo = struct.get(bufferInfo);
-if (dataInfo) {
-  const { object, key } = dataInfo;
-  console.log(object);
-  //   {
-  //     key: 2,
-  //     firmware: [ 1, 255, 0 ],
-  //     totalBytes: 1024,
-  //     usedBytes: 168545,
-  //     id: 8
-  //   }
-  console.log(key);
-  //   INFO
-}
-
-const bufferSetting = struct.set('SETTINGS', objectSetting);
-
-const dataSetting = struct.get(bufferSetting);
-if (dataSetting) {
-  const { object, key } = dataSetting;
-  console.log(object, key);
-}
-
+const buffer = codec.set('PORT', { gpio: 14, value: 10, command: protocol.enums.CMD.SET });
+const message = codec.get(buffer);
+// { key: 1, object: { key: 1, gpio: 14, value: 10, command: 2 } }
 ```
 
-See [example/example.js](example/example.js) for more.
+## API
 
-### 1.1.2 (2025-08-08)
+### `parseProtocol(source, options?)`
 
-- (bondrogeen) typescript
+Разбирает C++ заголовок в JSON:
 
-## 1.0.0 (2023-01-05)
+```json
+{
+  "protocol": 2,
+  "enums": { "KEY": { "INIT": 0 }, "CMD": { "SET": 2, "SAVE": 254 } },
+  "structs": {
+    "Port": {
+      "size": 5,
+      "fields": [
+        { "name": "key", "kind": "scalar", "type": "uint8_t", "offset": 0 },
+        { "name": "value", "kind": "scalar", "type": "uint16_t", "offset": 2 }
+      ]
+    }
+  },
+  "descriptions": {}
+}
+```
 
-- (bondrogeen) Change
+Опции: `file` (для ошибок), `maxStructSize` (по умолчанию 8192).
 
-## License
+Поддерживается:
 
-The MIT License (MIT)
+- несколько `enum` с явными значениями и выражениями (`1 << 4`, `A | B`);
+- структуры с примитивами, вложенными структурами и массивами `[N]`, `[N][M]`, `char[N]`;
+- packed-layout: `size` и `offset` считаются без паддингов;
+- комментарии `//` → `descriptions`.
 
-Copyright (c) 2021-2023, bondrogeen <bondrogeen@users.noreply.github.com>
+Ошибки приходят как `ProtocolParseError` с адресом `файл:строка:колонка`.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+### `new StructCodec().init({ enums, structs })`
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+| Метод | Назначение |
+|---|---|
+| `set(key, payload?)` | собрать `ArrayBuffer`; без payload — только ключ (1 байт), с payload — полная структура, недостающие поля — нули |
+| `get(buffer)` | разобрать в `{ key, object }`; `key` — число из `enum KEY` |
+| `sizeOf(key)` | размер сообщения |
+| `key`, `cmd`, `enums` | константы из протокола |
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+`key` можно передавать именем (`'PORT'`) или числом (`9`).
+
+Особенности кодека:
+
+- little-endian;
+- `set(key)` без payload — кадр из одного ключа (запрос); кадр полной длины означает запись, поэтому запрос нельзя паддить нулями;
+- числовые строки и `boolean` приводятся к числу — формы отдают `string`; нечисловые значения — ошибка;
+- `char[N]` — UTF-8 строка с `\0`, `uint8_t[N]` — массив чисел;
+- вложенные структуры и многомерные массивы кодируются рекурсивно;
+- ошибки содержат путь: `PORT.grid[1]: ожидался массив длиной 3`.
+
+## Генерация для проекта
+
+В приложении обычно используется скрипт (`vue/scripts/protocol-and-json.js`), который
+из `protocol.h` пишет:
+
+- `src/generated/protocol.ts` — `ENUMS`, `KEY`, `CMD`, `PORT`, `STRUCTS`,
+  интерфейсы структур, `IMessageMap`, `TMessage`; рантайм инициализируется из них:
+  `struct.init({ enums: ENUMS, structs: STRUCTS })`;
+- `src/const/protocol.generated.h` — `static_assert(sizeof(...))` и `offsetof(...)`;
+- `public/default.json` — только данные приложения (протокол в него не пишется).
+
+Запуск: `npm run protocol`, проверка в CI: `npm run protocol:check`.
+
+## Лицензия
+
+MIT

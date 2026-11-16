@@ -1,19 +1,17 @@
 {
   "name": "vuesp-struct",
-  "version": "1.3.1",
-  "main": "build/index.js",
+  "version": "2.0.0",
+  "main": "./build/index.js",
   "scripts": {
     "build": "tsc",
-    "start": "node example/example.js"
+    "start": "node example/example.js",
+    "test": "npm run build && node --test test/*.test.mjs"
   },
   "devDependencies": {
     "eslint": "^8.14.0",
     "typescript": "^5.9.2"
   },
-  "dependencies": {
-    "c-struct-to-json": "1.2.2"
-  },
-  "author": "bondrogeen@users.noreply.github.com",
+  "author": "bondrogeen",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -33,5 +31,13 @@
   "description": "``` npm install vuesp-struct ```",
   "directories": {
     "example": "example"
+  },
+  "types": "./build/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./build/index.d.ts",
+      "import": "./build/index.js"
+    }
   }
 }
